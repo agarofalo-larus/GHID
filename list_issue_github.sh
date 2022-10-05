@@ -1,6 +1,14 @@
 #!/bin/bash
-echo "GitHub issues downloader v0.2.1"
+echo "GitHub issues downloader v0.2.2"
 read -p "to run the script you need to have installed brew on your system. Press enter to continue"
+
+if which -s brew; then
+  echo "Brew installation found"
+else
+  echo "ERROR: brew installation not found"
+  exit 3
+fi
+
 echo "*****START*****"
 brew update
 echo "checking if gh, jq and dasel are installed on your system"
@@ -21,32 +29,29 @@ if [ $# -eq 0 ]; then
   if [[ -z "$nitem" ]]; then
     echo "ERROR: number of item is empty"
     exit 1
-  else
-
-    if [ $nitem -le 0 ]; then
-      echo "ERROR: number of item can not be 0 or less"
-      exit 1
-    else
-      echo "Limit at $nitem issues"
-      nitem="--limit ${nitem}"
-    fi
-
   fi
+
+  if [ $nitem -le 0 ]; then
+    echo "ERROR: number of item can not be 0 or less"
+    exit 1
+  fi
+  echo "Limit at $nitem issues"
+  nitem="--limit ${nitem}"
 
   echo "enter the filter by the state you prefer: {open|closed|all}"
   read -r stateitem
   if [[ -z "$stateitem" ]]; then
     echo "ERROR: the state is empty"
     exit 1
+  fi
+
+  if [ $2 == "open" ] || [ $2 == "closed" ] || [ $2 == "all" ]; then
+    echo "Selected $stateitem"
+    stateitem="--state ${stateitem}"
+    echo $stateitem
   else
-    if [ $2 == "open" ] || [ $2 == "closed" ] || [ $2 == "all" ]; then
-      echo "Selected $stateitem"
-      stateitem="--state ${stateitem}"
-      echo $stateitem
-    else
-      echo "ERROR: illegal state entered"
-      exit 1
-    fi
+    echo "ERROR: illegal state entered"
+    exit 1
   fi
 
   echo "enter the absolute path of the GitHub repo"
@@ -54,15 +59,18 @@ if [ $# -eq 0 ]; then
   if [[ -z "$repopath" ]]; then
     echo "ERROR: the path is empty"
     exit 1
+  fi
+  if [[ ! -d "$repopath" ]]; then
+    echo "ERROR: the path does not exist or is not a directory"
+    exit 2
+  fi
+  echo "Selected $repopath"
+  cd ${repopath}
+  if gh repo view; then
+    echo "GitHub repo found"
   else
-    if [[ ! -d "$repopath" ]]; then
-      echo "ERROR: the path does not exist or is not a directory"
-      exit 2
-    else
-      echo "Selected $repopath"
-      cd ${repopath}
-      echo $repopath
-    fi
+    echo "ERROR: the path does not contain a GitHub repository"
+    exit 2
   fi
 else
   if [ $# -ne 3 ]; then
@@ -70,15 +78,17 @@ else
     exit 1
   fi
   #The "PASSENGER" section allow to pass the parameters using the positional method
+
+  # --limit <int> number of the lastest issues to fetch
   if [ $1 -le 0 ]; then
     echo "ERROR: number of item can not be 0 or less"
     exit 1
-  else
-    echo "Limit at $nitem issues"
-    nitem="--limit $1"
   fi
+  echo "Limit at $1 issues"
+  nitem="--limit $1"
 
-  if [ $2 == "open" ] || [ $2 == "closed" ] || [ $2 == "all" ]; then
+  # --state <string> Filter by state: {open|closed|all}
+  if [ $2 == "open" -o $2 == "closed" -o $2 == "all" ]; then
     stateitem="--state $2"
     echo "State: $2"
   else
@@ -89,23 +99,23 @@ else
   if [ ! -d $3 ]; then
     echo "ERROR: the path does not exist or is not a directory"
     exit 2
+  fi
+  echo "Selected $3"
+  cd $3
+  if gh repo view; then
+    echo "GitHub repo found"
   else
-    echo "Selected $3"
-    cd $3
-    echo $3
+    echo "ERROR: the path does not contain a GitHub repository"
+    exit 2
   fi
 fi
 
-# --state <string> Filter by state: {open|closed|all}
-# --limit <int> number of the lastest issues to fetch
-#echo "gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv >issuetest.csv"
-gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,labels,number,projectCards,state,title,updatedAt,url >mario.json
-cat mario.json | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name] }]' >luigi.json
-cat luigi.json | dasel -r json -w csv >issuetest.csv
-# gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv >issuetest.csv
+gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv > "$(printf '%q\n' "${PWD##*/}").csv"
 # Print the result
-cat issuetest.csv
+cat "$(printf '%q\n' "${PWD##*/}").csv"
 
+echo "You can find the csv file named $(printf '%q\n' "${PWD##*/}").csv in the repo's root:"
+pwd
 echo "*****END*****"
 
 exit 0
