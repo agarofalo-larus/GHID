@@ -1,5 +1,15 @@
 #!/bin/bash
-echo "GitHub issues downloader v0.2.2"
+echo "GitHub issues downloader v0.2.3"
+
+echo -e " _____  _   _ ___________         _____  _____   _____ "
+echo -e "|  __ \| | | |_   _|  _  \       |  _  |/ __  \ |____ |"
+echo -e "| |  \/| |_| | | | | | | | __   _| |/' |\`' / /'     / /"
+echo -e "| | __ |  _  | | | | | | | \ \ / /  /| |  / /       \ \\"
+echo -e "| |_\ \| | | |_| |_| |/ /   \ V /\ |_/ /./ /____.___/ /"
+echo -e " \____/\_| |_/\___/|___/     \_/  \___(_)_____(_)____/ "
+echo -e "                                                       "
+echo -e "                                                       "
+
 read -p "to run the script you need to have installed brew on your system. Press enter to continue"
 
 if which -s brew; then
@@ -110,7 +120,7 @@ else
   fi
 fi
 
-gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv > "$(printf '%q\n' "${PWD##*/}").csv"
+gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,milestone,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], milestone: .milestone.title, project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv > "$(printf '%q\n' "${PWD##*/}").csv"
 # Print the result
 cat "$(printf '%q\n' "${PWD##*/}").csv"
 
