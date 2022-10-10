@@ -1,14 +1,15 @@
 #!/bin/bash
-echo "GitHub issues downloader v0.2.3"
 
-echo -e " _____  _   _ ___________         _____  _____   _____ "
-echo -e "|  __ \| | | |_   _|  _  \       |  _  |/ __  \ |____ |"
-echo -e "| |  \/| |_| | | | | | | | __   _| |/' |\`' / /'     / /"
-echo -e "| | __ |  _  | | | | | | | \ \ / /  /| |  / /       \ \\"
-echo -e "| |_\ \| | | |_| |_| |/ /   \ V /\ |_/ /./ /____.___/ /"
-echo -e " \____/\_| |_/\___/|___/     \_/  \___(_)_____(_)____/ "
-echo -e "                                                       "
-echo -e "                                                       "
+echo -e " _____  _   _ ___________         _____  _____    ___ "
+echo -e "|  __ \| | | |_   _|  _  \       |  _  |/ __  \  /   |"
+echo -e "| |  \/| |_| | | | | | | | __   _| |/' |\`' / /' / /| |"
+echo -e "| | __ |  _  | | | | | | | \ \ / /  /| |  / /  / /_| |"
+echo -e "| |_\ \| | | |_| |_| |/ /   \ V /\ |_/ /./ /___\___  |"
+echo -e " \____/\_| |_/\___/|___/     \_/  \___(_)_____(_)  |_/"
+echo -e "                                                      "
+echo -e "                                                      "
+
+echo "GitHub issues downloader v0.2.4"
 
 read -p "to run the script you need to have installed brew on your system. Press enter to continue"
 
@@ -45,6 +46,12 @@ if [ $# -eq 0 ]; then
     echo "ERROR: number of item can not be 0 or less"
     exit 1
   fi
+
+  if ! [[ $nitem =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Not a number"
+    exit 1
+  fi
+
   echo "Limit at $nitem issues"
   nitem="--limit ${nitem}"
 
@@ -55,10 +62,9 @@ if [ $# -eq 0 ]; then
     exit 1
   fi
 
-  if [ $2 == "open" ] || [ $2 == "closed" ] || [ $2 == "all" ]; then
+  if [ $stateitem == "open" -o $stateitem == "closed" -o $stateitem == "all" ]; then
     echo "Selected $stateitem"
     stateitem="--state ${stateitem}"
-    echo $stateitem
   else
     echo "ERROR: illegal state entered"
     exit 1
@@ -94,6 +100,12 @@ else
     echo "ERROR: number of item can not be 0 or less"
     exit 1
   fi
+
+  if ! [[ $1 =~ ^[0-9]+$ ]]; then
+    echo "ERROR: Not a number"
+    exit 1
+  fi
+
   echo "Limit at $1 issues"
   nitem="--limit $1"
 
@@ -120,7 +132,7 @@ else
   fi
 fi
 
-gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,milestone,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], milestone: .milestone.title, project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv > "$(printf '%q\n' "${PWD##*/}").csv"
+gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,milestone,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], milestone: .milestone.title, project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv >"$(printf '%q\n' "${PWD##*/}").csv"
 # Print the result
 cat "$(printf '%q\n' "${PWD##*/}").csv"
 
