@@ -14,4 +14,6 @@ You can launch this script in two ways:
 
 N.B. The script will download the most recent issues for the repo.
 
+During the execution, if you want, you can choose to filter by label. You can only choose one label.
+
 The .csv file returned can be imported into Google Sheets without any manipulation

@@ -1,15 +1,15 @@
 #!/bin/bash
 
-echo -e " _____  _   _ ___________         _____  _____    ___ "
-echo -e "|  __ \| | | |_   _|  _  \       |  _  |/ __  \  /   |"
-echo -e "| |  \/| |_| | | | | | | | __   _| |/' |\`' / /' / /| |"
-echo -e "| | __ |  _  | | | | | | | \ \ / /  /| |  / /  / /_| |"
-echo -e "| |_\ \| | | |_| |_| |/ /   \ V /\ |_/ /./ /___\___  |"
-echo -e " \____/\_| |_/\___/|___/     \_/  \___(_)_____(_)  |_/"
-echo -e "                                                      "
-echo -e "                                                      "
+echo -e " _____  _   _ ___________         _____  _____  __  "
+echo -e "|  __ \| | | |_   _|  _  \       |  _  ||____ |/  | "
+echo -e "| |  \/| |_| | | | | | | | __   _| |/' |    / /\`| | "
+echo -e "| | __ |  _  | | | | | | | \ \ / /  /| |    \ \ | | "
+echo -e "| |_\ \| | | |_| |_| |/ /   \ V /\ |_/ /.___/ /_| |_"
+echo -e " \____/\_| |_/\___/|___/     \_/  \___(_)____(_)___/"
+echo -e "                                                    "
+echo -e "                                                    "
 
-echo "GitHub issues downloader v0.2.4"
+echo "GitHub issues downloader v0.3.1"
 
 read -p "to run the script you need to have installed brew on your system. Press enter to continue"
 
@@ -132,7 +132,30 @@ else
   fi
 fi
 
-gh issue list ${nitem} ${stateitem} --json closedAt,createdAt,milestone,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], milestone: .milestone.title, project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv >"$(printf '%q\n' "${PWD##*/}").csv"
+#Filter by label
+read -p "Do you want to filter by a label? (y/n)" ynlabel
+
+case $ynlabel in
+[yY])
+  echo "Choose which label you want to filter by:"
+  read -r labelitem
+  if [[ -z "$labelitem" ]]; then
+    echo "ERROR: the label is empty"
+    exit 4
+  fi
+  echo "Selected $labelitem"
+  labelitem="-l ${labelitem}"
+  ;;
+[nN])
+  echo "The file will contain any kind of labels"
+  ;;
+*)
+  echo "Invalid response"
+  exit 4
+  ;;
+esac
+
+gh issue list ${nitem} ${stateitem} ${labelitem} --json closedAt,createdAt,milestone,labels,number,projectCards,state,title,updatedAt,url | jq '[.[] | {number, state, title, closedAt, createdAt, updatedAt, url, labels: [.labels[].name], milestone: .milestone.title, project: .projectCards[].project.name, column: .projectCards[].column.name }]' | dasel -r json -w csv >"$(printf '%q\n' "${PWD##*/}").csv"
 # Print the result
 cat "$(printf '%q\n' "${PWD##*/}").csv"
 
