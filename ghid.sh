@@ -60,6 +60,10 @@ while :; do
     repopath="$2"
     shift 2
     ;;
+  --)
+    shift
+    break
+    ;;
   *)
     echo "ERROR: unexpected option"
     help
@@ -107,35 +111,41 @@ echo "Limit at $nitem issues"
 nitem="--limit ${nitem}"
 
 if [ $stateitem == "open" -o $stateitem == "closed" -o $stateitem == "all" ]; then
-  echo "Selected $stateitem"
+  echo "Selected $stateitem state"
   stateitem="--state ${stateitem}"
 else
   echo "ERROR: illegal state entered"
   exit 1
 fi
 
+if [[ ! -z "$labelitem" ]]; then
+  echo "Selected $labelitem label"
+  labelitem="-l ${labelitem}"
+else
+  echo "The file will contain any kind of labels"
+fi
+
 if [[ -z "$repopath" ]]; then
   echo "ERROR: the path is empty"
   exit 3
 fi
+
+if [[ "$repopath" != /* ]]; then
+  echo "ERROR: the path is not absolute"
+  exit 3
+fi
+
 if [[ ! -d "$repopath" ]]; then
   echo "ERROR: the path does not exist or is not a directory"
   exit 2
 fi
-echo "Selected $repopath"
+echo "Selected $repopath as path"
 cd ${repopath}
 if gh repo view; then
   echo "GitHub repo found"
 else
   echo "ERROR: the path does not contain a GitHub repository"
   exit 2
-fi
-
-if [[ ! -z "$labelitem" ]]; then
-  echo "Selected $labelitem"
-  labelitem="-l ${labelitem}"
-else
-  echo "The file will contain any kind of labels"
 fi
 
 if [[ $(gh issue list --json projectItems | jq '[.[] | {project: .projectItems[].title}]' | jq length) -ne 0 ]]; then
