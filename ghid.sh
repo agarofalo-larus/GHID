@@ -5,7 +5,7 @@ OPTS=$(getopt $SHORT $*)
 
 help() {
   echo "
-    Usage: list_issue_github.sh
+    Usage: ghid.sh
     -l <label>              Label you want to filter by
     -h                      Show this help message and exit
     -n <number>             Number of the last n items to retrieve
